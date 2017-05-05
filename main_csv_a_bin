@@ -1,0 +1,104 @@
+typedef struct peliculas {id;
+                          char titulo[200];
+                          char guion [200];
+                          char director[200];
+                          time_t fecha;
+                          double puntaje;
+                          size_t reviews;
+                        } peli_t;
+
+
+
+int main (int argc, char *argv[]){
+
+
+  peli_t * films, * aux;
+  char * *csv_fields,*endptr,line[MAX_STR];
+  size_t n,used_size,alooc_size;
+  FILE *entrada, *salida;
+  salida=fopen("csv_a_bin.bin","wb");
+  entrada=fopen("csv_aleer(pelis).txt","r"); /*lo abrí porque no lo había abierto el patopatopato*/
+
+
+  if ((films=(peli_t*)calloc(INIT_CHOP,sizeof(peli_t)))==NULL){
+    fprintf(stderr,"%s:%s\n",ERROR,MSG_ERROR);
+    fclose(entrada); /*no lo abrimos nunca se cierra igaul, así que lo abrí*/
+    fclose(salida);
+    return EXIT_FAILURE;
+  }
+
+  used_size=0;
+  alloc_size=INIT_CHOP;
+
+  while (fgets(line,MAX_STR,entrada) != NULL){
+
+    if ((endptr=strrchr(line,'\n')) != NULL)
+    *endptr='\0';
+
+    if ((st=split(line,',',&csv_fields,&n)) != ST_OK){
+      handle_error(st);
+      del_person_array(&films,&used_size);
+      fclose (entrada);
+      fclose (salida);
+      return EXIT_FAILURE;
+    }
+
+    if(used_size==alloc_size){
+      if ((aux=(peli_t*)realloc(films,(alloc_size+CHOP_SIZE)*sizeof(peli_t))) == NULL){
+        fprintf(stderr, "%s:%s\n",ERROR,MSG_ERROR);
+        del_person_array(&films,&used_size);
+        del_str_array(&csvfields,&n)
+        fclose (entrada);
+        fclose (salida);
+        return EXIT_FAILURE;
+      }
+      alloc_size+=CHOP_SIZE;
+      films=aux;
+
+
+      if(*endptr!='\0'){
+        handle_error(st); /*¿iría este error?*/
+        del_person_array(&films,&used_size);
+        del_str_array(&csvfields,&n)
+        fclose (entrada);
+        fclose (salida);
+        return EXIT_FAILURE;
+      } /*fin del if*/
+
+
+      /*ACA TENDRÁ QUE IR EL COPY PARA CADA MIEMBRO DE LA ESTRUCUTRA PELIS, LO ESCRIBO
+      (tambien ver lo de la fecha en formato time_t)*/
+
+      }
+
+
+
+
+    }
+  used_size++
+}/*fin del while*/
+
+  if(fwrite(films,sizeof(person_t)used size;salida) != used_size){
+    fprintf(stderr, "%s:%s\n",ERROR,MSG_ERROR);
+    del_person_array(&films,&used_size);
+    del_str_array(&csvfields,&n)
+    fclose (entrada);
+    fclose (salida);
+    return EXIT_FAILURE;
+  }
+   fclose(salida);
+   fclose(entrada);
+
+   return EXIT_SUCCES;
+
+}/*fin del main*/
+
+status_t del_person_array (person_t ** films, size_t *n){
+  if(films==NULL)
+  return ST_ERRORNULL_PTR;
+
+  free (*people);
+  *people=NULL;
+  *n=0;
+  return ST_OK,
+}
