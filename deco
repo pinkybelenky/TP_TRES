@@ -10,7 +10,7 @@ typedef struct peliculas {double id;
 
 int main (argc, *argv[])
 {
-  int i;
+  size_t i;
   peli_t  st_p;
 
   FILE *ptrbin;
@@ -32,11 +32,13 @@ int main (argc, *argv[])
 
   while(!feof(ptrbin)){
         if(fread(&st_p, sizeof(peli_t),1,ptrbin) != 1 );{
-
+          printf("%s\n",MSG_ERROR_ARCH_LECUTRA);
+          return EXIT_FAILURE;
         } /*sera hardcode el !=1*/
         fprintf(ptrcsv,"%d,%s,%s,%s,,%d,%lu\n",st_p.id,delimst_p.titulo,st_p.guion,st_p.fecha,st_p.puntaje,st_p.reviews);
         /*en la paret de tie no se que poner porque es lo de time_t yo no tengo idea si está hardcodeado esto, tiene pinta pero no se
         me ocurre otra manera*/
+      
   }
 
   fclose(ptrcsv);
