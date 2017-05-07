@@ -50,7 +50,7 @@ int main(int argc, char const *argv[])
 
 	    if ((st=split(line,',',&csv_fields,&n)) != ST_OK){
 	      handle_error(st);
-	      del_person_array(&films,&used_size);
+	      del_films_array(&films,&used_size);
 	      fclose (entrada);
 	      fclose (salida);
 	      return EXIT_FAILURE;
@@ -59,7 +59,7 @@ int main(int argc, char const *argv[])
 	    if(used_size==alloc_size){
 	      if ((aux=(peli_t*)realloc(films,(alloc_size+CHOP_SIZE)*sizeof(peli_t))) == NULL){
 	        fprintf(stderr, "%s:%s\n",ERROR,MSG_ERROR);
-	        del_person_array(&films,&used_size);
+	        del_films_array(&films,&used_size);
 	        del_str_array(&csv_fields,&n)
 	        fclose (entrada);
 	        fclose (salida);
@@ -73,7 +73,7 @@ int main(int argc, char const *argv[])
 	    films[used_size].id =strtol(csv_fields[ID_FIELD_POS], &endptr,10);
 	    if(*endptr!='\0'){
 		    handle_error(st=ST_ERROR_CONVERSION); /* Todo este bloque es para checkear que la conversion salió bien*/  
-		    del_person_array(&films,&used_size);
+		    del_films_array(&films,&used_size);
 		    del_str_array(&csv_fields,&n)
 		    fclose (entrada);
 		    fclose (salida);
@@ -87,7 +87,7 @@ int main(int argc, char const *argv[])
 		films[used_size].reviews = strtol(csv_fields[REVIEWS_FIELD_POS], &endptr,10); 
 		if(*endptr!='\0'){
 		    handle_error(st=ST_ERROR_CONVERSION); 
-		    del_person_array(&films,&used_size);
+		    del_films_array(&films,&used_size);
 		    del_str_array(&csv_fields,&n)
 		    fclose (entrada);
 		    fclose (salida);
@@ -99,7 +99,7 @@ int main(int argc, char const *argv[])
 
 	if(fwrite(films,sizeof(person_t),used_size,salida) != used_size){
 	    fprintf(stderr, "%s:%s\n",ERROR,MSG_ERROR);
-	    del_person_array(&films,&used_size);
+	    del_films_array(&films,&used_size);
 	    del_str_array(&csv_fields,&n)
 	    fclose (entrada);
 	    fclose (salida);
@@ -113,17 +113,11 @@ int main(int argc, char const *argv[])
 }
 
 
-
-
-
-
-
-status_t del_person_array (person_t ** films, size_t *n){
+status_t del_films_array (peli_t ** films, size_t *n){
   if(films==NULL)
   return ST_ERRORNULL_PTR;
-
-  free (*people);
-  *people=NULL;
+  free (*films);
+  *films=NULL;
   *n=0;
   return ST_OK,
 }
