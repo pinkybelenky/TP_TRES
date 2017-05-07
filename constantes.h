@@ -1,4 +1,8 @@
 #define CANT_PARAM_CREAR_BASE 3
+#define CANT_PARAM_DECO 2
+#define SEPARADOR_FECHA '-'
+#define SEPARADOR_LINEAS ',' 
+
 #define INIT_CHOP 4
 #define ID_FIELD_POS 0
 #define TITLE_FIELD_POS 1

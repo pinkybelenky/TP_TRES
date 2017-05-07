@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <string.h>
 
 typedef struct peliculas {
 	size_t id;
@@ -126,7 +126,7 @@ status_t del_films_array (peli_t ** films, size_t *n){
 void ConvertirHora(char* str_time,struct tm* time_info_ptr){
 
 	char time_info_year[4], time_info_mon[2],time_info_day[2];
-	time_info_ptr->year = strtol(str_trim(str_time,'-'));
+	time_info_ptr->year = strtol(str_trim(str_time,'-')) -1900;
 	time_info_ptr->mon = strtol(str_trim(str_time +5,'-'));
 	time_info_ptr->mday = strtol(str_time +8);
 }
