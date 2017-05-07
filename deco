@@ -1,0 +1,47 @@
+typedef struct peliculas {double id;
+                          char titulo[200];
+                          char guion [200];
+                          char director[200];
+                          time_t fecha;
+                          double puntaje;
+                          size_t reviews;
+                        } peli_t;
+
+
+int main (argc, *argv[])
+{
+  int i;
+  peli_t  st_p;
+
+  FILE *ptrbin;
+  FILE *ptrcsv;
+  char *arch_entrada;
+  char *arch_salida;
+  arch_entrada = argv[1];
+  char delim = DELIM
+
+  if(ptrcsv=fopen(arch_salida,"w") == NULL){
+    printf("%s\n",MSG_ERROR_ARCH_SALIDA);
+    return EXIT_FAILURE;
+  }
+
+  if (ptrbin=fopen(arch_entrada,"rb") == NULL){
+  printf("%s\n",MSG_ERROR_ARCH_ENTRADA);
+  return EXIT_FAILURE;
+  }
+
+  while(!feof(ptrbin)){
+        if(fread(&st_p, sizeof(peli_t),1,ptrbin) != 1 );{
+
+        } /*sera hardcode el !=1*/
+        fprintf(ptrcsv,"%d,%s,%s,%s,,%d,%lu\n",st_p.id,delimst_p.titulo,st_p.guion,st_p.fecha,st_p.puntaje,st_p.reviews);
+        /*en la paret de tie no se que poner porque es lo de time_t yo no tengo idea si está hardcodeado esto, tiene pinta pero no se
+        me ocurre otra manera*/
+  }
+
+  fclose(ptrcsv);
+  fclose(ptrbin);
+
+  return EXIT_SUCCES
+
+}
