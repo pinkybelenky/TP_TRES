@@ -17,66 +17,50 @@ void imprimir_peli(peli_t peli);
 
 int main(int argc, char const *argv[])
 {
-	/* PASO LOS DATOS DEL BINARIO A UN ARRAY DE LA ESTRUCTURA. ESTO PROBABLEMENTE LO NECESITEMOS COMO FUNCIÖN MÄS ADELANTE*/
 	FILE *ptrbin;
-	peli_t  *peli_array;
+	peli_t  *peli_imprimir;
 	size_t used_size, alloc_size, i;
 
-	if (argc != CANT_PARAM_DECO) return EXIT_FAILURE;
+	if (argc != CANT_PARAM_DECO)
+	{
+		fprintf(stderr,"%s:%s\n",ERROR,MSG_ERROR_CANT_PARAM_ERRONEA);
+		return EXIT_FAILURE;
+	}	
 	
-
-	if ((ptrbin = open(argv[1],"rb")) == NULL);
+	
+	if ((ptrbin = open(argv[FILE_DECO_POS],"rb")) == NULL);
 	{
 		fprintf(stderr,"%s:%s\n",ERROR,MSG_ERROR_DECO_ARCH_ENTRADA);
    		return EXIT_FAILURE;
 	}
 
-	if ((peli_array = (peli_t*) calloc(INIT_CHOP, sizeof(peli_t))) == NULL)
+	if ((peli_imprimir = (peli_t*)calloc(CANT_PELI_A_IMPRIMIR,sizeof(peli_t))) == NULL)
 	{
-	    fprintf(stderr,"%s:%s\n",ERROR,MSG_ERROR);
+	    fprintf(stderr,"%s:%s\n",ERROR,MSG_ERROR_ALOCAR_MEMORIA);
 		fclose(ptrbin);
    		return EXIT_FAILURE;
 	}
-	used_size = 0;
-	alloc_size = INIT_CHOP;
 
-	while(!feof(ptrbin)){
-		if ((fread(peli_array + used_size, sizeof(peli_t), 1, ptrbin)) != 1)
-		{	
-			fprintf(stderr,"%s:%s\n",ERROR,MSG_ERROR_UNABLE_TO_READ_FROM_BINARY);
+	while((fread(peli_imprimir,sizeof(peli_t),CANT_PELI_A_IMPRIMIR,ptrbin)) != CANT_PELI_A_IMPRIMIR){
+		if(ferror(ptrbin)){
+			fprintf(stderr,"%s:%s\n",ERROR,MSG_ERROR_LEER_BINARIO);
 			fclose(ptrbin);
-			free(peli_array)
-	   		return EXIT_FAILURE
+			free(peli_imprimir);
+			return EXIT_FAILURE
 		}
-		used_size++;
-		if (used_size==alloc_size)
-		{
-			
-			if ((peli_array = (peli_t*) realloc(peli_array,alloc_size + INIT_CHOP)) == NULL)
-			{
-			    fprintf(stderr,"%s:%s\n",ERROR,MSG_ERROR);
-				fclose(ptrbin);
-		   		return EXIT_FAILURE;
-			}
-			alloc_size =+ INIT_CHOP;
-		}
-	}/* FIN WHILE Y CARGADA ARRAY DE ESTRUCTURA CON DATOS DEL ARCHIVO BINARIO */
-
-	/*IMPRIMIR ESTRUCTURAS POR STDOUT*/
-	for (i = 0; i < used_size +1; ++i)
-	{
-		imprimir_peli(peli_array[i]);
+		imprimir_peli(peli_imprimir);
 	}
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 
 void imprimir_peli(peli_t peli){
+	/* GENERO STRING DE FECHA */
 	struct tm fecha_peli;
-	char fecha[10] = "";
-	char fecha_anio[4];
-	char fecha_mes[2];
-	char fecha_dia[2];
+	char fecha[CANT_TOTAL_CHAR_FECHA] = "";
+	char fecha_anio[CANT_CHAR_FECHA_ANIO];
+	char fecha_mes[CANT_CHAR_FECHA_MES];
+	char fecha_dia[CANT_CHAR_FECHA_DIA];
 	char sep[2] = { SEPARADOR_FECHA,'\0'};
 	fecha_peli = localtime(peli.fecha);
 	strftime(fecha_anio, 10, "%Y", fecha_peli);
@@ -88,7 +72,7 @@ void imprimir_peli(peli_t peli){
 	strcat(fecha, fecha_mes);
 	strcat(fecha, sep);
 	strcat(fecha, fecha_dia);
- 
+ 	/*FIN GENERO STRING DE FECHA */
 	fprintf(STDOUT, "%lu%c%s%c%s%c%s%c%s%c%lf%c%lu\n", peli.id, SEPARADOR_LINEAS,peli.titulo, SEPARADOR_LINEAS , peli.guion , SEPARADOR_LINEAS , peli.director, SEPARADOR_LINEAS , peli.fecha ,  SEPARADOR_LINEAS, peli.puntaje ,  SEPARADOR_LINEAS, peli.reviews );
 }
 

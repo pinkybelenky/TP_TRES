@@ -11,3 +11,17 @@
 #define SCORE_FIELD_POS 5
 #define TIME_FIELD_POS 6
 #define REVIEWS_FIELD_POS 7
+
+
+/* DECO */
+#define FILE_DECO_POS 1
+#define CANT_PELI_A_IMPRIMIR 1
+#define CANT_TOTAL_CHAR_FECHA 10
+#define CANT_CHAR_FECHA_ANIO 4
+#define CANT_CHAR_FECHA_MES 2
+#define CANT_CHAR_FECHA_DIA 2
+
+/* RANKING */
+#define CANT_TOTAL_PARAM_RANK 8
+#define pos_command_cla 2
+#define CANT_ELEMENTOS_LEIDOS 1
