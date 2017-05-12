@@ -1,27 +1,23 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
+#include "constantes.h"
+#include "ranking.h"
 
 
-size_t obtener_pos_cla(char*,int argc, char*argv[]);
 
-
-typedef struct peliculas {
-	size_t id;
-    char titulo[200];
-    char guion [200];
-    char director[200];
-    time_t fecha;
-    double puntaje;
-    size_t reviews;
-    } peli_t;
 
 int main(int argc, char const *argv[])
 {
 	/* defino variables donde va a ir la posición de cada archivo dentro de la cla*/
-	size_t pos_db_cla, pos_file_cla, pos_log_cla 
+	size_t pos_db_cla, pos_file_cla, pos_log_cla; 
 
 	size_t cant_total_elem; /*se va a usar para la cantidad total de elmentos en la db cuando termina el programa*/
+
+	size_t eof_flag;
+
+	state_st estado;
 
 	FILE* db, pf, log, db_temp;
 
@@ -37,17 +33,17 @@ int main(int argc, char const *argv[])
 	pos_file_cla = obtener_pos_cla("f",argc,argv);/*falta definir macro */
 	pos_log_cla = obtener_pos_cla("log",argc,argv);/*falta definir macro */
 
-	if ((strcmp(argv[pos_command_cla], "ALTA"))==0)/*falta definir macro para "ALTA"*/
+	if ((strcmp(argv[POS_COMMAND_CLA], "ALTA"))==0)/*falta definir macro para "ALTA"*/
 	{
-		realizar_alta()
+		realizar_alta();
 	}
-	else if ((strcmp(argv[pos_command_cla], "BAJA"))==0)/*falta definir macro para "BAJA"*/
+	else if ((strcmp(argv[POS_COMMAND_CLA], "BAJA"))==0)/*falta definir macro para "BAJA"*/
 	{
-		realizar_baja()
+		realizar_baja();
 	}
-	else if ((strcmp(argv[pos_command_cla], "MODIFICAR"))==0)/*falta definir macro para "MODIFICAR"*/
+	else if ((strcmp(argv[POS_COMMAND_CLA], "MODIFICAR"))==0)/*falta definir macro para "MODIFICAR"*/
 	{
-		realizar_mod()
+		realizar_mod();
 	}
 	else{
 		fprintf(stderr, "%s:%s\n",ERROR, ERROR_INVALID_COMMAND);
@@ -55,20 +51,6 @@ int main(int argc, char const *argv[])
 	}
 	return 0;
 }
-
-
-
-size_t obtener_pos_cla(char* pos_cla,int argc, char*argv[]){
-	int i;
-	for (i = 0; i < argc; ++i)
-	{
-		if (strcmp(pos_cla, argv[i]) == 0)
-		{
-			return i+1;
-		}
-	}
-}
-
 
 
 /*REALIZAR_ALTA*/
@@ -97,6 +79,8 @@ if ((db_temp = fopen(db_temp_name, "wb"]))== NULL)
 }
 /*FIN ABRO ARCHIVOS*/
 
+
+
 /*PIDO MEMORIA PARA AMBOS ESTRUCTURAS POR PRIMERA VEZ*/
 if((db_struct = (peli_t*)calloc(CANT_ELEMENTOS_LEIDOS,sizeof(peli_t)))==NULL){
 	fprintf(stderr, "%s:%s\n",ERROR,ERROR_MEMORIA);
@@ -124,7 +108,7 @@ if ((fread(db_struct,sizeof(peli_t),CANT_ELEMENTOS_LEIDOS,db)) =! CANT_ELEMENTOS
 {
 	if(error(db))
 	{
-		fprintf(stderr, "%s:%s\n",ERROR,ERROR_LOAD_DB);
+		fprintf(stderr, "%s:%s\n",ERROR,ERROR_LOAD);
 		free(file_struct)
 		free(db_struct)
 		fclose(db_temp);
@@ -139,3 +123,7 @@ if ((fread(db_struct,sizeof(peli_t),CANT_ELEMENTOS_LEIDOS,db)) =! CANT_ELEMENTOS
 	
 
 /* FIN LEO UNA VEZ LA DB Y EL ARCHIVO*/
+
+
+
+

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "msg_esp.h"
 
 
 void realizar_alta(char*,char*,char*);
