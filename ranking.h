@@ -27,8 +27,11 @@ typedef struct peliculas {
 
 typedef enum{
     READ_BOTH_FILES,
+    READ_DB,
     READ_DB_ONLY,
-    READ_FILE_ONLY
+    READ_FILE,
+    READ_FILE_ONLY,
+    NO_MORE_BYTES_TO_READ
 } reading_st;
 
 struct tm* ConvertirHora(char*,struct tm*,char**);
@@ -47,7 +50,16 @@ state_st ask_mem(peli_t**);
 void handle_state(state_st, peli_t*, peli_t*, FILE*, FILE*, FILE*, FILE*);
 
 
+void imprimir_peli(peli_t *peli,FILE*);
+void free_and_close(peli_t*,peli_t*,FILE*,FILE*,FILE*);
 
+void free_and_close(peli_t* file_struct,peli_t* db_struct, FILE* log, FILE* db, FILE* pf){
+    free(file_struct)
+    free(db_struct)
+    fclose(log);
+    fclose(pf);
+    fclose(db);
+}
 
 void handle_error(state_st st){
     switch (st) {
@@ -126,6 +138,8 @@ state_st ask_mem(peli_t** ptr){
 /*MANEJA EL ESTADO QUE DEVUELVEN LAS FUNCIONES ask_mem y demás */
 void handle_state(state_st st, peli_t* db_struct,peli_t* file_struct,FILE* db_temp,FILE* log,FILE* pf,FILE* db){
     switch (st) {
+        case ST_OK:
+            break;
         case ST_MEMORY_ERROR:
             fprintf(stderr, "%s:%s\n",ERROR,ERROR_MEMORIA);
             free(db_struct);
@@ -212,4 +226,28 @@ void del_str_array(char** strings, size_t *L){
     free(strings);
     strings = NULL;
     *L = 0;
+}
+
+
+
+void imprimir_peli(peli_t* peli, FILE * pf){
+    /* GENERO STRING DE FECHA */
+    struct tm* fecha_peli;
+    char fecha[CANT_TOTAL_CHAR_FECHA] = "";
+    char fecha_anio[CANT_CHAR_FECHA_ANIO];
+    char fecha_mes[CANT_CHAR_FECHA_MES];
+    char fecha_dia[CANT_CHAR_FECHA_DIA];
+    char sep[2] = { SEPARADOR_FECHA,'\0'};
+    fecha_peli = localtime(&(peli->fecha));
+    strftime(fecha_anio, 10, "%Y", fecha_peli);
+    strftime(fecha_mes, 10, "%m", fecha_peli);
+    strftime(fecha_dia, 10, "%d", fecha_peli);
+
+    strcat(fecha, fecha_anio);
+    strcat(fecha, sep);
+    strcat(fecha, fecha_mes);
+    strcat(fecha, sep);
+    strcat(fecha, fecha_dia);
+    /*FIN GENERO STRING DE FECHA */
+    fprintf(pf, "%lu%c%s%c%s%c%s%c%s%c%f%c%lu\n", peli->id, SEPARADOR_LINEAS,peli->titulo, SEPARADOR_LINEAS , peli->guion , SEPARADOR_LINEAS , peli->director, SEPARADOR_LINEAS , fecha ,  SEPARADOR_LINEAS, peli->puntaje ,  SEPARADOR_LINEAS, peli->reviews );
 }

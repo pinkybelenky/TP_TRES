@@ -7,7 +7,7 @@
 #include "ranking.h"
 
 
-void imprimir_peli(peli_t *peli);
+
 
 int main(int argc, char const *argv[])
 {
@@ -41,31 +41,9 @@ int main(int argc, char const *argv[])
 			free(peli_imprimir);
 			return EXIT_FAILURE;
 		}
-		imprimir_peli(peli_imprimir);
+		imprimir_peli(peli_imprimir,stdout);
 	}
 	return EXIT_SUCCESS;
 }
 
-
-void imprimir_peli(peli_t* peli){
-	/* GENERO STRING DE FECHA */
-	struct tm* fecha_peli;
-	char fecha[CANT_TOTAL_CHAR_FECHA] = "";
-	char fecha_anio[CANT_CHAR_FECHA_ANIO];
-	char fecha_mes[CANT_CHAR_FECHA_MES];
-	char fecha_dia[CANT_CHAR_FECHA_DIA];
-	char sep[2] = { SEPARADOR_FECHA,'\0'};
-	fecha_peli = localtime(&(peli->fecha));
-	strftime(fecha_anio, 10, "%Y", fecha_peli);
-	strftime(fecha_mes, 10, "%m", fecha_peli);
-	strftime(fecha_dia, 10, "%d", fecha_peli);
-
-	strcat(fecha, fecha_anio);
-	strcat(fecha, sep);
-	strcat(fecha, fecha_mes);
-	strcat(fecha, sep);
-	strcat(fecha, fecha_dia);
- 	/*FIN GENERO STRING DE FECHA */
-	fprintf(stdout, "%lu%c%s%c%s%c%s%c%s%c%f%c%lu\n", peli->id, SEPARADOR_LINEAS,peli->titulo, SEPARADOR_LINEAS , peli->guion , SEPARADOR_LINEAS , peli->director, SEPARADOR_LINEAS , fecha ,  SEPARADOR_LINEAS, peli->puntaje ,  SEPARADOR_LINEAS, peli->reviews );
-}
 
