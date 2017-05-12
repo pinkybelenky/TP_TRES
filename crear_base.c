@@ -54,7 +54,7 @@ int main(int argc, char const *argv[])
 	      if ((aux=(peli_t*)realloc(films,(alloc_size+CHOP_SIZE)*sizeof(peli_t))) == NULL){
 	        fprintf(stderr, "%s:%s\n",ERROR,MSG_ERROR);
 	        del_films_array(&films,&used_size);
-	        del_str_array(&csv_fields,&n);
+	        del_str_array(csv_fields,&n);
 	        fclose (entrada);
 	        fclose (salida);
 	        return EXIT_FAILURE;
@@ -68,7 +68,7 @@ int main(int argc, char const *argv[])
 	    if(*endptr!='\0'){
 		    handle_error(st=ST_ERROR_CONVERSION); /* Todo este bloque es para checkear que la conversion salió bien*/  
 		    del_films_array(&films,&used_size);
-		    del_str_array(&csv_fields,&n);
+		    del_str_array(csv_fields,&n);
 		    fclose (entrada);
 		    fclose (salida);
 		    return EXIT_FAILURE;
@@ -82,7 +82,7 @@ int main(int argc, char const *argv[])
 		if(*endptr!='\0'){
 		    handle_error(st=ST_ERROR_CONVERSION); 
 		    del_films_array(&films,&used_size);
-		    del_str_array(&csv_fields,&n);
+		    del_str_array(csv_fields,&n);
 		    fclose (entrada);
 		    fclose (salida);
 		    return EXIT_FAILURE;
@@ -94,7 +94,7 @@ int main(int argc, char const *argv[])
 	if(fwrite(films,sizeof(peli_t),used_size,salida) != used_size){
 	    fprintf(stderr, "%s:%s\n",ERROR,MSG_ERROR);
 	    del_films_array(&films,&used_size);
-	    del_str_array(&csv_fields,&n);
+	    del_str_array(csv_fields,&n);
 	    fclose (entrada);
 	    fclose (salida);
 	    return EXIT_FAILURE;

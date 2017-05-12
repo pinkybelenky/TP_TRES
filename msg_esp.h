@@ -9,3 +9,6 @@
 #define ERROR_MEMORIA ""
 #define ERROR_LOAD ""
 #define ERROR_LOAD_DB ""
+#define MSG_ERROR_CANT_PARAM_ERRONEA ""
+#define MSG_ERROR_DECO_ARCH_ENTRADA ""
+#define MSG_ERROR_LEER_BINARIO ""

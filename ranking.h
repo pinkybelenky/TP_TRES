@@ -37,6 +37,9 @@ int indexof(char* str, char c);
 state_st del_films_array (peli_t ** films, size_t *n);
 state_st split(char*, char, char***,size_t*);
 void handle_error(state_st);
+state_st split(char*,char,char***,size_t*);
+char* strdup(char*);
+void del_str_array(char**,size_t*);
 
 
 size_t obtener_pos_cla(char*,int argc, char*argv[]);
@@ -101,14 +104,15 @@ int indexof(char* str, char c){
 
 
 size_t obtener_pos_cla(char* pos_cla,int argc, char*argv[]){
-    int i;
+    int i,res;
     for (i = 0; i < argc; ++i)
     {
         if (strcmp(pos_cla, argv[i]) == 0)
         {
-            return i+1;
+            res = i+1;
         }
     }
+    return res;
 }
 
 state_st ask_mem(peli_t** ptr){
@@ -122,8 +126,6 @@ state_st ask_mem(peli_t** ptr){
 /*MANEJA EL ESTADO QUE DEVUELVEN LAS FUNCIONES ask_mem y demás */
 void handle_state(state_st st, peli_t* db_struct,peli_t* file_struct,FILE* db_temp,FILE* log,FILE* pf,FILE* db){
     switch (st) {
-        case ST_OK:
-            break;
         case ST_MEMORY_ERROR:
             fprintf(stderr, "%s:%s\n",ERROR,ERROR_MEMORIA);
             free(db_struct);
@@ -142,5 +144,72 @@ void handle_state(state_st st, peli_t* db_struct,peli_t* file_struct,FILE* db_te
             fclose(pf);
             fclose(db);
             break;
+        default:
+            break;
     }
+}
+
+
+state_st split(char* str_fields,char delim, char*** str_array,size_t* L){
+    char** strings;
+    size_t n,i;
+    char* campo,*aux,*line;
+    char sdelim[2];
+
+    if (str_fields == NULL || str_array == NULL || L==NULL)
+    {
+    return ST_ERROR_NULL_PTR;
+    }
+
+    for(n=0,i=0;str_fields[i];i++){
+        if(str_fields[i] == delim){
+            n++;
+        }
+    }
+    n++;
+    if (((strings = (char**)malloc(n*sizeof(char*)))==NULL))
+    {
+        return ST_MEMORY_ERROR;
+    }
+    if ((line=strdup(str_fields)) == NULL){
+        free(strings);
+        return ST_MEMORY_ERROR;
+    }
+    sdelim[0]=delim;
+    sdelim[1]='\0';
+    for (i = 0,aux=line; (campo =strtok(aux,sdelim))!=NULL; ++i)
+    {
+        if(( strings[i] = strdup(campo)) ==NULL )
+            free(line);
+            del_str_array(strings,&n);
+            *str_array = NULL;
+            *L = 0;
+            return ST_MEMORY_ERROR;
+    }
+    *str_array = strings;
+    *L = n;
+    free(line);
+    return ST_OK;
+}
+
+char* strdup(char* str){
+    char* str2;
+    if((str2 = (char*)malloc(sizeof(char) * (strlen(str)+1)))==NULL){
+        return NULL;
+    }
+    strcpy(str2,str);
+    return str2;
+
+}
+
+void del_str_array(char** strings, size_t *L){
+    int i;
+
+    for(i = 0; i< (*L);i++){
+        free(strings[i]);
+        strings[i] = NULL;
+    }
+    free(strings);
+    strings = NULL;
+    *L = 0;
 }
