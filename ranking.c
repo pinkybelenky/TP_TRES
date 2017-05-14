@@ -323,13 +323,11 @@ int main(int argc, char const *argv[])
 				/* FIN CASE READ_FILE */
 			
 			case READ_DB_ONLY:
-			printf("%s\n", "READ_DB_ONLY");
 				if ((st = peli_cpy(&db_temp[used_size],db_struct) != ST_OK)) /*como un strcpy pero de peli_t (no hace falta pedir memoria)*/
       			{
       				handle_state(st,db_struct,file_struct,log,pf,db);
       				return EXIT_FAILURE;
       			}
-      			printf("%d\n",db_temp[used_size].id );
 	  			used_size++;
    				
 				if ((fread(db_struct,sizeof(peli_t),CANT_ELEMENTOS_LEIDOS,pf)) != CANT_ELEMENTOS_LEIDOS)
@@ -340,7 +338,7 @@ int main(int argc, char const *argv[])
 						free_and_close(file_struct,db_struct,log,pf,db);
 						return EXIT_FAILURE;	
 					}
-					else{printf("%s\n", "bbbb");
+					else{
 						/*SI no hay error significa que ya no hay más archivos en la db y en el archivo*/
 						estado = NO_MORE_BYTES_TO_READ;
 						break;
@@ -363,7 +361,6 @@ int main(int argc, char const *argv[])
 			/* FIN CASE READ_DB_ONLY */
 			
 			case READ_FILE_ONLY:
-			printf("%s\n", "READ_FILE_ONLY");
 				if ((st = peli_cpy(&db_temp[used_size],file_struct) != ST_OK)) /*como un strcpy pero de peli_t (no hace falta pedir memoria)*/
       			{
       				handle_state(st,db_struct,file_struct,log,pf,db);
@@ -400,7 +397,6 @@ int main(int argc, char const *argv[])
 	  			break;
 	  		case NO_MORE_BYTES_TO_READ:
 	  		/* CIERRO DB, LA ABRO EN MODO ESCRITURA Y GUARDO db_temp*/
-	  			printf("%s\n", "AAA");
 	  			fclose(db);
 	  			if ((db = fopen(argv[pos_db_cla], "wb"))== NULL)
 				{
@@ -437,11 +433,629 @@ int main(int argc, char const *argv[])
 	}
 	else if ((strcmp(argv[POS_COMMAND_CLA], "BAJA"))==0)/*falta definir macro para "BAJA"*/
 	{
-		/*realizar_baja();*/
-	}
+		/***********************************************************************************************/
+		/***********************************************************************************************/
+		/**************************************REALIZAR_BAJA********************************************/
+		/***********************************************************************************************/
+		/***********************************************************************************************/
+
+		/*PIDO MEMORIA PARA EL ARREGLO DE LA NUEVA DB*/
+		if ((db_temp=(peli_t*)calloc(INIT_CHOP,sizeof(peli_t)))==NULL){
+			    fprintf(stderr,"%s:%s\n",ERROR,MSG_ERROR);
+				free_and_close(file_struct,db_struct,log,pf,db);
+			    return EXIT_FAILURE;
+			}
+
+		used_size=0;
+		alloc_size=INIT_CHOP;
+
+		estado = READ_BOTH_FILES;
+
+		while (1){
+			switch(estado){
+				case READ_BOTH_FILES:
+					if ((fread(db_struct,sizeof(peli_t),CANT_ELEMENTOS_LEIDOS,db)) != CANT_ELEMENTOS_LEIDOS)
+					{		
+						if(ferror(db))
+						{
+							fprintf(stderr, "%s:%s\n",ERROR,ERROR_LOAD);
+							free_and_close(file_struct,db_struct,log,pf,db);
+							return EXIT_FAILURE;	
+						}
+						else{/*SI no hay error significa que ya no hay más archivos en la db*/
+							estado = READ_FILE_ONLY;
+							break;
+						}
+					}
+					if ((fread(file_struct,sizeof(peli_t),CANT_ELEMENTOS_LEIDOS,pf)) != CANT_ELEMENTOS_LEIDOS)
+					{	
+						if(ferror(pf))
+						{
+							fprintf(stderr, "%s:%s\n",ERROR,ERROR_LOAD);
+							free_and_close(file_struct,db_struct,log,pf,db);
+							return EXIT_FAILURE;	
+						}
+						else{
+							/*SI no hay error significa que ya no hay más archivos en el archivo => cargó un archivo de db y leeo los que quedan*/
+							if(used_size==alloc_size){
+							    if ((aux=(peli_t*)realloc(db_temp,(alloc_size+CHOP_SIZE)*sizeof(peli_t))) == NULL){
+							        fprintf(stderr, "%s:%s\n",ERROR,MSG_ERROR);
+							        del_films_array(&db_temp,&used_size);
+									free_and_close(file_struct,db_struct,log,pf,db);	
+							        return EXIT_FAILURE;
+							    }
+							    alloc_size+=CHOP_SIZE;
+							    db_temp=aux;
+			      			}
+			      			if ((st = peli_cpy(&db_temp[used_size],db_struct) != ST_OK)) /*como un strcpy pero de peli_t (no hace falta pedir memoria)*/
+			      			{
+			      				handle_state(st,db_struct,file_struct,log,pf,db);
+			      				return EXIT_FAILURE;
+			      			}
+
+			      			used_size++;
+							estado = READ_DB_ONLY;
+							break;
+						}
+					}
+					if(used_size==alloc_size)
+					{
+					    if ((aux=(peli_t*)realloc(db_temp,(alloc_size+CHOP_SIZE)*sizeof(peli_t))) == NULL){
+					        fprintf(stderr, "%s:%s\n",ERROR,MSG_ERROR);
+					        del_films_array(&db_temp,&used_size);
+							free_and_close(file_struct,db_struct,log,pf,db);
+					        return EXIT_FAILURE;
+					    }
+					    alloc_size+=CHOP_SIZE;
+					    db_temp=aux;
+	      			}
+					if (db_struct->id == file_struct->id){
+						/* Si son iguales no hago nada y leo de los 2 archivos*/					
+		      			estado = READ_BOTH_FILES;
+		      			break;
+
+					}else if(db_struct->id < file_struct->id){
+
+						/*guardo el de db y leo de nuevo db*/
+		      			if ((st = peli_cpy(&db_temp[used_size],db_struct) != ST_OK)) /*como un strcpy pero de peli_t (no hace falta pedir memoria)*/
+		      			{
+		      				handle_state(st,db_struct,file_struct,log,pf,db);
+		      				return EXIT_FAILURE;
+		      			}
+		      			used_size++;
+		      			estado = READ_DB;
+		      			break;
+					}
+
+					else{
+						/*el registro del archivo tiene un Id menor => como están ordenados significa que es un error y va a log*/
+		      			fprintf(log, "%s\n", ERROR_BAJA);
+						imprimir_peli(file_struct,log);	      			
+		      			estado = READ_FILE;
+		      			break;
+					}
+
+				/* FIN CASE READ_BOTH_FILES */	
+				case READ_DB:
+					if ((fread(db_struct,sizeof(peli_t),CANT_ELEMENTOS_LEIDOS,db)) != CANT_ELEMENTOS_LEIDOS)
+					{
+						if(ferror(db))
+						{
+							fprintf(stderr, "%s:%s\n",ERROR,ERROR_LOAD);
+							free_and_close(file_struct,db_struct,log,pf,db);
+							return EXIT_FAILURE;	
+						}
+						else{/*SI no hay error significa que ya no hay más archivos en la db*/
+							estado = READ_FILE_ONLY;
+							break;
+						}
+					}
+
+					if(used_size==alloc_size){
+						    if ((aux=(peli_t*)realloc(db_temp,(alloc_size+CHOP_SIZE)*sizeof(peli_t))) == NULL){
+						        fprintf(stderr, "%s:%s\n",ERROR,MSG_ERROR);
+						        del_films_array(&db_temp,&used_size);
+								free_and_close(file_struct,db_struct,log,pf,db);
+						        return EXIT_FAILURE;
+						    }
+						    alloc_size+=CHOP_SIZE;
+						    db_temp=aux;
+		      			}
+					if (db_struct->id == file_struct->id){
+						/* Si son iguales no hago nada y leo de los 2 archivos*/					
+		      			estado = READ_BOTH_FILES;
+		      			break;
+
+					}else if(db_struct->id < file_struct->id){
+						/*guardo el de db y leo de nuevo db*/
+		      			if ((st = peli_cpy(&db_temp[used_size],db_struct) != ST_OK)) /*como un strcpy pero de peli_t (no hace falta pedir memoria)*/
+		      			{
+		      				handle_state(st,db_struct,file_struct,log,pf,db);
+		      				return EXIT_FAILURE;
+		      			}
+		      			used_size++;
+		      			estado = READ_DB;
+		      			break;
+					}
+					else{
+						/*el registro del archivo tiene un Id menor => como están ordenados significa que es un error y va a log*/
+		      			fprintf(log, "%s\n", ERROR_BAJA);
+						imprimir_peli(file_struct,log);	      			
+		      			estado = READ_FILE;
+		      			break;
+					}
+
+				/* FIN CASE READ_DB */	
+				
+				case READ_FILE:
+
+					if ((fread(file_struct,sizeof(peli_t),CANT_ELEMENTOS_LEIDOS,pf)) != CANT_ELEMENTOS_LEIDOS)
+					{
+						if(ferror(pf))
+						{
+							fprintf(stderr, "%s:%s\n",ERROR,ERROR_LOAD);
+							free_and_close(file_struct,db_struct,log,pf,db);
+							return EXIT_FAILURE;	
+						}
+						else{
+							/*SI no hay error significa que ya no hay más archivos en el archivo => paso a leer de db*/
+							estado = READ_DB_ONLY;
+							break;
+						}
+					}
+					if(used_size==alloc_size)
+					{
+					    if ((aux=(peli_t*)realloc(db_temp,(alloc_size+CHOP_SIZE)*sizeof(peli_t))) == NULL){
+					        fprintf(stderr, "%s:%s\n",ERROR,MSG_ERROR);
+					        del_films_array(&db_temp,&used_size);
+							free_and_close(file_struct,db_struct,log,pf,db);
+					        return EXIT_FAILURE;
+					    }
+					    alloc_size+=CHOP_SIZE;
+					    db_temp=aux;
+					}
+					if (db_struct->id == file_struct->id)
+					{
+						/* Si son iguales no hago nada y leo de los 2 archivos*/
+		      			estado = READ_BOTH_FILES;
+		      			break;
+
+					}
+					else if(db_struct->id < file_struct->id){
+						/*guardo el de db y leo de nuevo db*/
+		      			if ((st = peli_cpy(&db_temp[used_size],db_struct) != ST_OK)) /*como un strcpy pero de peli_t (no hace falta pedir memoria)*/
+		      			{
+		      				handle_state(st,db_struct,file_struct,log,pf,db);
+		      				return EXIT_FAILURE;
+		      			}
+		      			used_size++;
+		      			estado = READ_DB;
+		      			break;
+					}
+					else
+					{
+						/*el registro del archivo tiene un Id menor => como están ordenados significa que es un error y va a log*/
+		      			fprintf(log, "%s\n", ERROR_BAJA);
+						imprimir_peli(file_struct,log);	      			
+		      			estado = READ_FILE;
+			      		break;
+					}
+					/* FIN CASE READ_FILE */
+				
+				case READ_DB_ONLY:
+					if ((st = peli_cpy(&db_temp[used_size],db_struct) != ST_OK)) /*como un strcpy pero de peli_t (no hace falta pedir memoria)*/
+	      			{
+	      				handle_state(st,db_struct,file_struct,log,pf,db);
+	      				return EXIT_FAILURE;
+	      			}
+		  			used_size++;
+	   				
+					if ((fread(db_struct,sizeof(peli_t),CANT_ELEMENTOS_LEIDOS,pf)) != CANT_ELEMENTOS_LEIDOS)
+					{	
+						if(ferror(pf))
+						{
+							fprintf(stderr, "%s:%s\n",ERROR,ERROR_LOAD);
+							free_and_close(file_struct,db_struct,log,pf,db);
+							return EXIT_FAILURE;	
+						}
+						else{
+							/*SI no hay error significa que ya no hay más archivos en la db y en el archivo*/
+							estado = NO_MORE_BYTES_TO_READ;
+							break;
+						}
+					}
+					if(used_size==alloc_size)
+					{
+					    if ((aux=(peli_t*)realloc(db_temp,(alloc_size+CHOP_SIZE)*sizeof(peli_t))) == NULL){
+					        fprintf(stderr, "%s:%s\n",ERROR,MSG_ERROR);
+					        del_films_array(&db_temp,&used_size);
+							free_and_close(file_struct,db_struct,log,pf,db);
+					        return EXIT_FAILURE;
+					    }
+					    alloc_size+=CHOP_SIZE;
+					    db_temp=aux;
+					}
+		  			estado = READ_DB_ONLY;
+		  			break;
+
+				/* FIN CASE READ_DB_ONLY */
+				
+				case READ_FILE_ONLY:
+				/*Quedaron registros en el archivo que son errores => van al log*/
+					fprintf(log, "%s\n", ERROR_BAJA);
+					imprimir_peli(file_struct,log);	      			
+					if ((fread(file_struct,sizeof(peli_t),CANT_ELEMENTOS_LEIDOS,pf)) != CANT_ELEMENTOS_LEIDOS)
+					{
+						if(ferror(pf))
+						{
+							fprintf(stderr, "%s:%s\n",ERROR,ERROR_LOAD);
+							free_and_close(file_struct,db_struct,log,pf,db);
+							return EXIT_FAILURE;	
+						}
+						else{
+							/*SI no hay error significa que ya no hay más archivos en la db y en el archivo*/
+							estado = NO_MORE_BYTES_TO_READ;
+							break;
+						}
+					}					
+		  			estado = READ_FILE_ONLY;
+		  			break;
+		  		case NO_MORE_BYTES_TO_READ:
+		  		/* CIERRO DB, LA ABRO EN MODO ESCRITURA Y GUARDO db_temp*/
+		  			fclose(db);
+		  			if ((db = fopen(argv[pos_db_cla], "wb"))== NULL)
+					{
+						fprintf(stderr, "%s:%s\n",ERROR, ERROR_OPEN_DB);
+						del_films_array(&db_temp,&used_size);
+						free(db_struct);
+						free(file_struct);
+						fclose(log);
+						fclose(pf);
+						return EXIT_FAILURE;
+					}
+					if ((fwrite(db_temp, sizeof(peli_t),used_size,db)) != used_size)
+					{
+						fprintf(stderr, "%s:%s\n",ERROR, ERROR_WRITE_FILE);
+						del_films_array(&db_temp,&used_size);
+						free_and_close(file_struct,db_struct,log,pf,db);
+						return EXIT_FAILURE;
+					}
+					free_and_close(file_struct,db_struct,log,pf,db);
+
+					return EXIT_SUCCESS;
+
+				/* FIN CASE READ_FILE_ONLY */
+			}
+		}
+
+
+		/***********************************************************************************************/
+		/***********************************************************************************************/
+		/****************************************** FIN BAJA********************************************/
+		/***********************************************************************************************/
+		/***********************************************************************************************/
+	}	
 	else if ((strcmp(argv[POS_COMMAND_CLA], "MODIFICAR"))==0)/*falta definir macro para "MODIFICAR"*/
 	{
-		/*realizar_mod();*/
+		/***********************************************************************************************/
+		/***********************************************************************************************/
+		/**************************************REALIZAR_MODI********************************************/
+		/***********************************************************************************************/
+		/***********************************************************************************************/
+
+		/*PIDO MEMORIA PARA EL ARREGLO DE LA NUEVA DB*/
+		if ((db_temp=(peli_t*)calloc(INIT_CHOP,sizeof(peli_t)))==NULL){
+			    fprintf(stderr,"%s:%s\n",ERROR,MSG_ERROR);
+				free_and_close(file_struct,db_struct,log,pf,db);
+			    return EXIT_FAILURE;
+			}
+
+		used_size=0;
+		alloc_size=INIT_CHOP;
+
+		estado = READ_BOTH_FILES;
+
+		while (1){
+			switch(estado){
+				case READ_BOTH_FILES:
+					if ((fread(db_struct,sizeof(peli_t),CANT_ELEMENTOS_LEIDOS,db)) != CANT_ELEMENTOS_LEIDOS)
+					{		
+						if(ferror(db))
+						{
+							fprintf(stderr, "%s:%s\n",ERROR,ERROR_LOAD);
+							free_and_close(file_struct,db_struct,log,pf,db);
+							return EXIT_FAILURE;	
+						}
+						else{/*SI no hay error significa que ya no hay más archivos en la db*/
+							estado = READ_FILE_ONLY;
+							break;
+						}
+					}
+					if ((fread(file_struct,sizeof(peli_t),CANT_ELEMENTOS_LEIDOS,pf)) != CANT_ELEMENTOS_LEIDOS)
+					{	
+						if(ferror(pf))
+						{
+							fprintf(stderr, "%s:%s\n",ERROR,ERROR_LOAD);
+							free_and_close(file_struct,db_struct,log,pf,db);
+							return EXIT_FAILURE;	
+						}
+						else{
+							/*SI no hay error significa que ya no hay más archivos en el archivo => cargó un archivo de db y leeo los que quedan*/
+							if(used_size==alloc_size){
+							    if ((aux=(peli_t*)realloc(db_temp,(alloc_size+CHOP_SIZE)*sizeof(peli_t))) == NULL){
+							        fprintf(stderr, "%s:%s\n",ERROR,MSG_ERROR);
+							        del_films_array(&db_temp,&used_size);
+									free_and_close(file_struct,db_struct,log,pf,db);	
+							        return EXIT_FAILURE;
+							    }
+							    alloc_size+=CHOP_SIZE;
+							    db_temp=aux;
+			      			}
+			      			if ((st = peli_cpy(&db_temp[used_size],db_struct) != ST_OK)) /*como un strcpy pero de peli_t (no hace falta pedir memoria)*/
+			      			{
+			      				handle_state(st,db_struct,file_struct,log,pf,db);
+			      				return EXIT_FAILURE;
+			      			}
+
+			      			used_size++;
+							estado = READ_DB_ONLY;
+							break;
+						}
+					}
+					if(used_size==alloc_size)
+					{
+					    if ((aux=(peli_t*)realloc(db_temp,(alloc_size+CHOP_SIZE)*sizeof(peli_t))) == NULL){
+					        fprintf(stderr, "%s:%s\n",ERROR,MSG_ERROR);
+					        del_films_array(&db_temp,&used_size);
+							free_and_close(file_struct,db_struct,log,pf,db);
+					        return EXIT_FAILURE;
+					    }
+					    alloc_size+=CHOP_SIZE;
+					    db_temp=aux;
+	      			}
+					if (db_struct->id == file_struct->id){
+						/* Si son iguales guardo el registro modificado del archivo y leo  ambos archivos*/
+		      			if ((st = peli_cpy(&db_temp[used_size],file_struct) != ST_OK)) /*como un strcpy pero de peli_t (no hace falta pedir memoria)*/
+		      			{
+		      				handle_state(st,db_struct,file_struct,log,pf,db);
+		      				return EXIT_FAILURE;
+		      			}
+		      			used_size++;					
+		      			estado = READ_BOTH_FILES;
+		      			break;
+
+					}else if(db_struct->id < file_struct->id){
+
+						/*guardo el de db y leo de nuevo db*/
+		      			if ((st = peli_cpy(&db_temp[used_size],db_struct) != ST_OK)) /*como un strcpy pero de peli_t (no hace falta pedir memoria)*/
+		      			{
+		      				handle_state(st,db_struct,file_struct,log,pf,db);
+		      				return EXIT_FAILURE;
+		      			}
+		      			used_size++;
+		      			estado = READ_DB;
+		      			break;
+					}
+
+					else{
+						/*el registro del archivo tiene un Id menor => como están ordenados significa que es un error y va a log*/
+		      			fprintf(log, "%s\n", ERROR_MOD);
+						imprimir_peli(file_struct,log);	      			
+		      			estado = READ_FILE;
+		      			break;
+					}
+
+				/* FIN CASE READ_BOTH_FILES */	
+				case READ_DB:
+					if ((fread(db_struct,sizeof(peli_t),CANT_ELEMENTOS_LEIDOS,db)) != CANT_ELEMENTOS_LEIDOS)
+					{
+						if(ferror(db))
+						{
+							fprintf(stderr, "%s:%s\n",ERROR,ERROR_LOAD);
+							free_and_close(file_struct,db_struct,log,pf,db);
+							return EXIT_FAILURE;	
+						}
+						else{/*SI no hay error significa que ya no hay más archivos en la db*/
+							estado = READ_FILE_ONLY;
+							break;
+						}
+					}
+
+					if(used_size==alloc_size){
+						    if ((aux=(peli_t*)realloc(db_temp,(alloc_size+CHOP_SIZE)*sizeof(peli_t))) == NULL){
+						        fprintf(stderr, "%s:%s\n",ERROR,MSG_ERROR);
+						        del_films_array(&db_temp,&used_size);
+								free_and_close(file_struct,db_struct,log,pf,db);
+						        return EXIT_FAILURE;
+						    }
+						    alloc_size+=CHOP_SIZE;
+						    db_temp=aux;
+		      			}
+					if (db_struct->id == file_struct->id){
+						/* Si son iguales guardo el registro modificado del archivo y leo  ambos archivos*/
+		      			if ((st = peli_cpy(&db_temp[used_size],file_struct) != ST_OK)) /*como un strcpy pero de peli_t (no hace falta pedir memoria)*/
+		      			{
+		      				handle_state(st,db_struct,file_struct,log,pf,db);
+		      				return EXIT_FAILURE;
+		      			}
+		      			used_size++;					
+		      			estado = READ_BOTH_FILES;
+		      			break;
+
+					}else if(db_struct->id < file_struct->id){
+						/*guardo el de db y leo de nuevo db*/
+		      			if ((st = peli_cpy(&db_temp[used_size],db_struct) != ST_OK)) /*como un strcpy pero de peli_t (no hace falta pedir memoria)*/
+		      			{
+		      				handle_state(st,db_struct,file_struct,log,pf,db);
+		      				return EXIT_FAILURE;
+		      			}
+		      			used_size++;
+		      			estado = READ_DB;
+		      			break;
+					}
+					else{
+						/*el registro del archivo tiene un Id menor => como están ordenados significa que es un error y va a log*/
+		      			fprintf(log, "%s\n", ERROR_MOD);
+						imprimir_peli(file_struct,log);	      			
+		      			estado = READ_FILE;
+		      			break;
+					}
+
+				/* FIN CASE READ_DB */	
+				
+				case READ_FILE:
+
+					if ((fread(file_struct,sizeof(peli_t),CANT_ELEMENTOS_LEIDOS,pf)) != CANT_ELEMENTOS_LEIDOS)
+					{
+						if(ferror(pf))
+						{
+							fprintf(stderr, "%s:%s\n",ERROR,ERROR_LOAD);
+							free_and_close(file_struct,db_struct,log,pf,db);
+							return EXIT_FAILURE;	
+						}
+						else{
+							/*SI no hay error significa que ya no hay más archivos en el archivo => paso a leer de db*/
+							estado = READ_DB_ONLY;
+							break;
+						}
+					}
+					if(used_size==alloc_size)
+					{
+					    if ((aux=(peli_t*)realloc(db_temp,(alloc_size+CHOP_SIZE)*sizeof(peli_t))) == NULL){
+					        fprintf(stderr, "%s:%s\n",ERROR,MSG_ERROR);
+					        del_films_array(&db_temp,&used_size);
+							free_and_close(file_struct,db_struct,log,pf,db);
+					        return EXIT_FAILURE;
+					    }
+					    alloc_size+=CHOP_SIZE;
+					    db_temp=aux;
+					}
+					if (db_struct->id == file_struct->id)
+					{
+						/* Si son iguales guardo el registro modificado del archivo y leo  ambos archivos*/
+		      			if ((st = peli_cpy(&db_temp[used_size],file_struct) != ST_OK)) /*como un strcpy pero de peli_t (no hace falta pedir memoria)*/
+		      			{
+		      				handle_state(st,db_struct,file_struct,log,pf,db);
+		      				return EXIT_FAILURE;
+		      			}
+		      			used_size++;					
+		      			estado = READ_BOTH_FILES;
+		      			break;
+
+					}
+					else if(db_struct->id < file_struct->id){
+						/*guardo el de db y leo de nuevo db*/
+		      			if ((st = peli_cpy(&db_temp[used_size],db_struct) != ST_OK)) /*como un strcpy pero de peli_t (no hace falta pedir memoria)*/
+		      			{
+		      				handle_state(st,db_struct,file_struct,log,pf,db);
+		      				return EXIT_FAILURE;
+		      			}
+		      			used_size++;
+		      			estado = READ_DB;
+		      			break;
+					}
+					else
+					{
+						/*el registro del archivo tiene un Id menor => como están ordenados significa que es un error y va a log*/
+		      			fprintf(log, "%s\n", ERROR_MOD);
+						imprimir_peli(file_struct,log);	      			
+		      			estado = READ_FILE;
+			      		break;
+					}
+					/* FIN CASE READ_FILE */
+				
+				case READ_DB_ONLY:
+					if ((st = peli_cpy(&db_temp[used_size],db_struct) != ST_OK)) /*como un strcpy pero de peli_t (no hace falta pedir memoria)*/
+	      			{
+	      				handle_state(st,db_struct,file_struct,log,pf,db);
+	      				return EXIT_FAILURE;
+	      			}
+		  			used_size++;
+	   				
+					if ((fread(db_struct,sizeof(peli_t),CANT_ELEMENTOS_LEIDOS,pf)) != CANT_ELEMENTOS_LEIDOS)
+					{	
+						if(ferror(pf))
+						{
+							fprintf(stderr, "%s:%s\n",ERROR,ERROR_LOAD);
+							free_and_close(file_struct,db_struct,log,pf,db);
+							return EXIT_FAILURE;	
+						}
+						else{
+							/*SI no hay error significa que ya no hay más archivos en la db y en el archivo*/
+							estado = NO_MORE_BYTES_TO_READ;
+							break;
+						}
+					}
+					if(used_size==alloc_size)
+					{
+					    if ((aux=(peli_t*)realloc(db_temp,(alloc_size+CHOP_SIZE)*sizeof(peli_t))) == NULL){
+					        fprintf(stderr, "%s:%s\n",ERROR,MSG_ERROR);
+					        del_films_array(&db_temp,&used_size);
+							free_and_close(file_struct,db_struct,log,pf,db);
+					        return EXIT_FAILURE;
+					    }
+					    alloc_size+=CHOP_SIZE;
+					    db_temp=aux;
+					}
+		  			estado = READ_DB_ONLY;
+		  			break;
+
+				/* FIN CASE READ_DB_ONLY */
+				
+				case READ_FILE_ONLY:
+					/*Quedaron registros en el archivo que son errores => van al log*/
+					fprintf(log, "%s\n", ERROR_MOD);
+					imprimir_peli(file_struct,log);	      			
+					if ((fread(file_struct,sizeof(peli_t),CANT_ELEMENTOS_LEIDOS,pf)) != CANT_ELEMENTOS_LEIDOS)
+					{
+						if(ferror(pf))
+						{
+							fprintf(stderr, "%s:%s\n",ERROR,ERROR_LOAD);
+							free_and_close(file_struct,db_struct,log,pf,db);
+							return EXIT_FAILURE;	
+						}
+						else{
+							/*SI no hay error significa que ya no hay más archivos en la db y en el archivo*/
+							estado = NO_MORE_BYTES_TO_READ;
+							break;
+						}
+					}					
+		  			estado = READ_FILE_ONLY;
+		  			break;
+		  		case NO_MORE_BYTES_TO_READ:
+		  		/* CIERRO DB, LA ABRO EN MODO ESCRITURA Y GUARDO db_temp*/
+		  			fclose(db);
+		  			if ((db = fopen(argv[pos_db_cla], "wb"))== NULL)
+					{
+						fprintf(stderr, "%s:%s\n",ERROR, ERROR_OPEN_DB);
+						del_films_array(&db_temp,&used_size);
+						free(db_struct);
+						free(file_struct);
+						fclose(log);
+						fclose(pf);
+						return EXIT_FAILURE;
+					}
+					if ((fwrite(db_temp, sizeof(peli_t),used_size,db)) != used_size)
+					{
+						fprintf(stderr, "%s:%s\n",ERROR, ERROR_WRITE_FILE);
+						del_films_array(&db_temp,&used_size);
+						free_and_close(file_struct,db_struct,log,pf,db);
+						return EXIT_FAILURE;
+					}
+					free_and_close(file_struct,db_struct,log,pf,db);
+
+					return EXIT_SUCCESS;
+
+				/* FIN CASE READ_FILE_ONLY */
+			}
+		}
+
+
+		/***********************************************************************************************/
+		/***********************************************************************************************/
+		/****************************************** FIN MODI********************************************/
+		/***********************************************************************************************/
+		/***********************************************************************************************/
 	}
 	else{
 		fprintf(stderr, "%s:%s\n",ERROR, ERROR_INVALID_COMMAND);
@@ -455,3 +1069,8 @@ int main(int argc, char const *argv[])
 
 
 
+
+
+
+
+	

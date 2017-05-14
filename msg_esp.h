@@ -15,3 +15,5 @@
 #define ERROR_CONVER "14"
 #define ERROR_NULL_PTR "15"
 #define ERROR_WRITE_FILE "16"
+#define ERROR_BAJA "17"
+#define ERROR_MOD "18"
