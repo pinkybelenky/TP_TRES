@@ -1,6 +1,6 @@
 /*funcion split*/
 t_estado split (const char *S/*string*/, char delim/*simbolo*/, char*** str_array, size_t *L)
-{
+{ 
   char **strings;
   size_t n,i; /*numero de sepradores*/
   char * campo;
