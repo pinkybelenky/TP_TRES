@@ -45,13 +45,15 @@ char* strdup(char*);
 void del_str_array(char**,size_t*);
 
 
-size_t obtener_pos_cla(char*,int argc, char*argv[]);
+size_t obtener_pos_cla(char*,int argc,const char*argv[]);
 state_st ask_mem(peli_t**);
-void handle_state(state_st, peli_t*, peli_t*, FILE*, FILE*, FILE*, FILE*);
+void handle_state(state_st, peli_t*, peli_t*, FILE*, FILE*, FILE*);
 
 
 void imprimir_peli(peli_t *peli,FILE*);
 void free_and_close(peli_t*,peli_t*,FILE*,FILE*,FILE*);
+
+state_st peli_cpy(peli_t*,peli_t*);
 
 void free_and_close(peli_t* file_struct,peli_t* db_struct, FILE* log, FILE* db, FILE* pf){
     free(file_struct);
@@ -124,7 +126,7 @@ int indexof(char* str, char c){
 
 
 
-size_t obtener_pos_cla(char* pos_cla,int argc, char*argv[]){
+size_t obtener_pos_cla(char* pos_cla,int argc, const char*argv[]){
     int i,res;
     for (i = 0; i < argc; ++i)
     {
@@ -145,7 +147,7 @@ state_st ask_mem(peli_t** ptr){
 }   
 
 /*MANEJA EL ESTADO QUE DEVUELVEN LAS FUNCIONES ask_mem y demás */
-void handle_state(state_st st, peli_t* db_struct,peli_t* file_struct,FILE* db_temp,FILE* log,FILE* pf,FILE* db){
+void handle_state(state_st st, peli_t* db_struct,peli_t* file_struct,FILE* log,FILE* pf,FILE* db){
     switch (st) {
         case ST_OK:
             break;
@@ -153,7 +155,6 @@ void handle_state(state_st st, peli_t* db_struct,peli_t* file_struct,FILE* db_te
             fprintf(stderr, "%s:%s\n",ERROR,ERROR_MEMORIA);
             free(db_struct);
             free(file_struct);
-            fclose(db_temp);
             fclose(log);
             fclose(pf);
             fclose(db);
@@ -162,7 +163,6 @@ void handle_state(state_st st, peli_t* db_struct,peli_t* file_struct,FILE* db_te
             fprintf(stderr, "%s:%s\n",ERROR,ERROR_LOAD_DB);
             free(file_struct);
             free(db_struct);
-            fclose(db_temp);
             fclose(log);
             fclose(pf);
             fclose(db);
@@ -266,4 +266,22 @@ void imprimir_peli(peli_t* peli, FILE * pf){
     strcat(fecha, fecha_dia);
     /*FIN GENERO STRING DE FECHA */
     fprintf(pf, "%lu%c%s%c%s%c%s%c%s%c%f%c%lu\n", peli->id, SEPARADOR_LINEAS,peli->titulo, SEPARADOR_LINEAS , peli->guion , SEPARADOR_LINEAS , peli->director, SEPARADOR_LINEAS , fecha ,  SEPARADOR_LINEAS, peli->puntaje ,  SEPARADOR_LINEAS, peli->reviews );
+}
+
+
+state_st peli_cpy(peli_t* dest,peli_t* src){
+    if ((dest == NULL) || (src == NULL) )
+    {
+        return ST_ERROR_NULL_PTR;
+    }
+
+    dest->id = src->id;
+    if ((strcpy(dest->titulo,src->titulo) == NULL) || (strcpy(dest->guion,src->guion) == NULL )|| (strcpy(dest->director,src->director)) == NULL )
+    {
+        return ST_MEMORY_ERROR;
+    }
+    dest->fecha = src->fecha;
+    dest->puntaje = src->puntaje;
+    dest->reviews = src->reviews;
+    return ST_OK;
 }

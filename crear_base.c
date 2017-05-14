@@ -120,14 +120,13 @@ int main(int argc, char const *argv[])
 
 
 	if(fwrite(films,sizeof(peli_t),used_size,salida) != used_size){
-	    fprintf(stderr, "%s:%s\n",ERROR,MSG_ERROR);
+	    fprintf(stderr, "%s:%s\n",ERROR,ERROR_WRITE_FILE);
 	    del_films_array(&films,&used_size);
 	    del_str_array(csv_fields,&n);
 	    fclose (entrada);
 	    fclose (salida);
 	    return EXIT_FAILURE;
   	}
-  	/*for(i=0; i<n+1;i++){free(csv_fields[i]);}*/
   	free(films);
   	fclose(salida);
    	fclose(entrada);
