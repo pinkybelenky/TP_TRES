@@ -1,17 +1,19 @@
 #define CANT_PARAM_CREAR_BASE 3
 #define CANT_PARAM_DECO 2
 #define SEPARADOR_FECHA '-'
-#define SEPARADOR_LINEAS ',' 
+#define SEPARADOR_LINEAS ','
+#define CANT_CAMPOS 10
+
 
 #define INIT_CHOP 4
 #define CHOP_SIZE 4
 #define ID_FIELD_POS 0
 #define TITLE_FIELD_POS 1
 #define SCRIPT_FIELD_POS 2
-#define DIRECTOR_FIELD_POS 4
-#define SCORE_FIELD_POS 5
-#define TIME_FIELD_POS 6
-#define REVIEWS_FIELD_POS 7
+#define DIRECTOR_FIELD_POS 3
+#define TIME_FIELD_POS 4
+#define SCORE_FIELD_POS 7
+#define REVIEWS_FIELD_POS 8
 
 #define MAX_STR 50
 #define POS_CREAR_BASE_DB 2

@@ -7,7 +7,7 @@
 
 
 typedef enum{
-	ST_OK,
+	ST_OK=1,
 	ST_MEMORY_ERROR,
 	ST_UNABLE_TO_READ_FROM_FILE,
 	ST_ERROR_CONVERSION,
@@ -34,7 +34,7 @@ typedef enum{
     NO_MORE_BYTES_TO_READ
 } reading_st;
 
-struct tm* ConvertirHora(char*,struct tm*,char**);
+struct tm* ConvertirHora(char**,struct tm*,char**);
 state_st str_trim(char*, char ,char*);
 int indexof(char* str, char c);
 state_st del_films_array (peli_t ** films, size_t *n);
@@ -54,8 +54,8 @@ void imprimir_peli(peli_t *peli,FILE*);
 void free_and_close(peli_t*,peli_t*,FILE*,FILE*,FILE*);
 
 void free_and_close(peli_t* file_struct,peli_t* db_struct, FILE* log, FILE* db, FILE* pf){
-    free(file_struct)
-    free(db_struct)
+    free(file_struct);
+    free(db_struct);
     fclose(log);
     fclose(pf);
     fclose(db);
@@ -70,6 +70,15 @@ void handle_error(state_st st){
             break;
         case ST_UNABLE_TO_READ_FROM_FILE:
             fprintf(stderr, "%s:%s\n",ERROR,ERROR_LOAD_DB);
+            break;
+        case ST_ERROR_CONVERSION:
+            fprintf(stderr, "%s:%s\n",ERROR,ERROR_CONVER);
+            break;
+        case ST_ERROR_NULL_PTR:
+            fprintf(stderr, "%s:%s\n",ERROR,ERROR_MEMORIA);
+            break;
+        default:
+            printf("%s\n", "fff");
             break;
     }
 }
@@ -86,12 +95,12 @@ state_st del_films_array (peli_t ** films, size_t *n){
 }
 
 
-struct tm* ConvertirHora(char* str_time,struct tm* time_info_ptr,char** endptr){
+struct tm* ConvertirHora(char** str_time,struct tm* time_info_ptr,char** endptr){
 
     char time_info_year[CANT_CHAR_FECHA_ANIO], time_info_mon[CANT_CHAR_FECHA_MES],time_info_day[CANT_CHAR_FECHA_DIA];
-    time_info_ptr->tm_year = strtol(strncpy(time_info_year,str_time,CANT_CHAR_FECHA_ANIO),endptr,10) -1900;
-    time_info_ptr->tm_mon = strtol(strncpy(time_info_mon,str_time +5,CANT_CHAR_FECHA_MES),endptr,10);
-    time_info_ptr->tm_mon = strtol(strncpy(time_info_day,str_time +8,CANT_CHAR_FECHA_DIA),endptr,10);
+    time_info_ptr->tm_year = (strtol(strncpy(time_info_year,*str_time,CANT_CHAR_FECHA_ANIO+1),endptr,10) -1900);
+    time_info_ptr->tm_mon = (strtol(strncpy(time_info_mon,*(str_time +1),CANT_CHAR_FECHA_MES+1),endptr,10) -1);
+    time_info_ptr->tm_mday = strtol(strncpy(time_info_day,*(str_time +2),CANT_CHAR_FECHA_DIA+1),endptr,10);
     return time_info_ptr;
 }
 
@@ -191,15 +200,22 @@ state_st split(char* str_fields,char delim, char*** str_array,size_t* L){
     }
     sdelim[0]=delim;
     sdelim[1]='\0';
-    for (i = 0,aux=line; (campo =strtok(aux,sdelim))!=NULL; ++i)
+    i = 0;
+    aux = line;
+    campo =strtok(aux,sdelim);
+    do
     {
-        if(( strings[i] = strdup(campo)) ==NULL )
+        if(( strings[i] = strdup(campo)) ==NULL ){
+            printf("%s\n", strings[i]);
             free(line);
             del_str_array(strings,&n);
             *str_array = NULL;
             *L = 0;
             return ST_MEMORY_ERROR;
-    }
+        }
+        i++;
+    } while ((campo =strtok(NULL,sdelim))!=NULL);
+
     *str_array = strings;
     *L = n;
     free(line);

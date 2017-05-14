@@ -17,9 +17,20 @@ int main(int argc, char const *argv[])
 	FILE *entrada, *salida;
 	struct tm time_info;
 
+	if ((salida=fopen(argv[POS_CREAR_BASE_DB],"wb")) == NULL)
+	{
+		fprintf(stderr,"%s:%s\n",ERROR,"MSG_ERROR_DECO_ARCH_ENTRADA");
+   		return EXIT_FAILURE;
+	}
+	if (( entrada = fopen(argv[POS_CREAR_BASE_CSV],"rt")) == NULL)
+	{
+		fprintf(stderr,"%s:%s\n",ERROR,"MSG_ERROR_DECO_ARCH_ENTRAaaaaaaaaDA");
+   		return EXIT_FAILURE;
+	}
+	/*
 	salida=fopen(argv[POS_CREAR_BASE_DB],"wb");
 	entrada=fopen(argv[POS_CREAR_BASE_CSV],"rt");
-	
+	*/
 
 	time_info.tm_sec = 0;
 	time_info.tm_min = 0;
@@ -41,7 +52,7 @@ int main(int argc, char const *argv[])
 
 	    if ((endptr=strrchr(line,'\n')) != NULL)
 	    *endptr='\0';
-
+		
 	    if ((st=split(line,',',&csv_fields,&n)) != ST_OK){
 	      handle_error(st);
 	      del_films_array(&films,&used_size);
@@ -66,7 +77,7 @@ int main(int argc, char const *argv[])
       	/* PASO TODOS LOS DATOS DE csv_fields a el lugar de films */
 	    films[used_size].id =strtol(csv_fields[ID_FIELD_POS], &endptr,10);
 	    if(*endptr!='\0'){
-		    handle_error(st=ST_ERROR_CONVERSION); /* Todo este bloque es para checkear que la conversion salió bien*/  
+		    handle_error(st=ST_ERROR_CONVERSION); /* Todo este bloque es para checkear que la conversion salió bien*/ 
 		    del_films_array(&films,&used_size);
 		    del_str_array(csv_fields,&n);
 		    fclose (entrada);
@@ -76,20 +87,37 @@ int main(int argc, char const *argv[])
 		strcpy(films[used_size].titulo, csv_fields[TITLE_FIELD_POS]);
 		strcpy(films[used_size].guion, csv_fields[SCRIPT_FIELD_POS]);
 		strcpy(films[used_size].director, csv_fields[DIRECTOR_FIELD_POS]);
-		films[used_size].puntaje = atof(csv_fields[SCORE_FIELD_POS]);
-		films[used_size].fecha = mktime(ConvertirHora(csv_fields[TIME_FIELD_POS],&time_info, &endptr));
-		films[used_size].reviews = strtol(csv_fields[REVIEWS_FIELD_POS], &endptr,10); 
-		if(*endptr!='\0'){
+		films[used_size].puntaje = strtod(csv_fields[SCORE_FIELD_POS],&endptr);
+		/*if(*endptr !='\0'){
 		    handle_error(st=ST_ERROR_CONVERSION); 
 		    del_films_array(&films,&used_size);
 		    del_str_array(csv_fields,&n);
 		    fclose (entrada);
 		    fclose (salida);
 		    return EXIT_FAILURE;
-	  	} 
+	  	} */
+		films[used_size].reviews = strtol(csv_fields[REVIEWS_FIELD_POS], &endptr,10);
+		/*if(*endptr !='\0'){
+		    handle_error(st=ST_ERROR_CONVERSION); 
+		    del_films_array(&films,&used_size);
+		    del_str_array(csv_fields,&n);
+		    fclose (entrada);
+		    fclose (salida);
+		    return EXIT_FAILURE;
+	  	} */
+		films[used_size].fecha = mktime(ConvertirHora(&csv_fields[TIME_FIELD_POS],&time_info, &endptr));
+		/*if(*endptr !='\0'){
+		    handle_error(st=ST_ERROR_CONVERSION); 
+		    del_films_array(&films,&used_size);
+		    del_str_array(csv_fields,&n);
+		    fclose (entrada);
+		    fclose (salida);
+		    return EXIT_FAILURE;
+	  	} */
+		used_size++;
 
     }/*fin del while*/
-    used_size++;
+
 
 	if(fwrite(films,sizeof(peli_t),used_size,salida) != used_size){
 	    fprintf(stderr, "%s:%s\n",ERROR,MSG_ERROR);
@@ -99,7 +127,8 @@ int main(int argc, char const *argv[])
 	    fclose (salida);
 	    return EXIT_FAILURE;
   	}
-
+  	/*for(i=0; i<n+1;i++){free(csv_fields[i]);}*/
+  	free(films);
   	fclose(salida);
    	fclose(entrada);
 
